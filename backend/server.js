@@ -19,7 +19,7 @@ connectDB();
 app.use(express.json());
 app.use(cors({
   origin: ['https://demo-upi.vercel.app', 'http://localhost:5173', 'http://localhost:3000', 'http://localhost:5174'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
 app.use(helmet());
