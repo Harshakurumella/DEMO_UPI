@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
 import QRCodeDisplay from '../components/QRCodeDisplay';
-import UTRForm from '../components/UTRForm';
 import toast from 'react-hot-toast';
 
 const PaymentPage = () => {
@@ -107,23 +106,21 @@ const PaymentPage = () => {
             <div className="animate-fadeIn">
               {paymentData && (
                 <>
-                  <QRCodeDisplay 
-                    upiLink={paymentData.upiLink} 
-                    amount={paymentData.amount} 
+                  <QRCodeDisplay
+                    upiLink={paymentData.upiLink}
+                    amount={paymentData.amount}
                     orderId={paymentData.orderId}
+                    upiId={paymentData.upiId}
                   />
-                  <div className="max-w-md mx-auto mt-6">
-                    <UTRForm orderId={paymentData.orderId} />
-                    <button 
-                      onClick={() => {
-                        setStep(1);
-                        setPaymentData(null);
-                      }}
-                      className="mt-4 w-full bg-white text-gray-600 py-3 rounded-lg font-medium border border-gray-200 hover:bg-gray-50 transition shadow-sm"
-                    >
-                      Cancel Payment
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => {
+                      setStep(1);
+                      setPaymentData(null);
+                    }}
+                    className="mt-4 w-full bg-white text-gray-600 py-3 rounded-lg font-medium border border-gray-200 hover:bg-gray-50 transition shadow-sm"
+                  >
+                    Cancel Payment
+                  </button>
                 </>
               )}
             </div>

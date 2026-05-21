@@ -1,90 +1,155 @@
-import { QRCodeSVG } from 'qrcode.react';
-import { useState, useEffect } from 'react';
+import { QRCodeSVG } from "qrcode.react";
+import { useState } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
-const QRCodeDisplay = ({ upiLink, amount, orderId }) => {
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+const QRCodeDisplay = ({ upiLink, amount, orderId, upiId }) => {
+  const [utrNumber, setUtrNumber] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const isAndroid = /Android/i.test(navigator.userAgent);
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isMobile = isAndroid || isIOS;
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-
-  const upiId = import.meta.env.VITE_UPI_ID || 'yourname@upi';
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(upiId);
-    alert('UPI ID copied!');
+  const handleUTRSubmit = async (e) => {
+    e.preventDefault();
+    if (!utrNumber || utrNumber.length < 6) {
+      toast.error("Please enter a valid UTR number");
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/payment/submit-utr`, {
+        orderId,
+        utrNumber,
+      });
+      toast.success("Payment submitted successfully!");
+      navigate(`/status/${orderId}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
+    <div className="w-full max-w-md mx-auto">
+      {/* QR Code — shown on ALL devices */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 mb-4 text-center">
+        <h2 className="text-lg font-bold text-gray-800 mb-1">
+          Scan & Pay ₹{amount}
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          {isMobile
+            ? "Scan QR or tap the button below to pay"
+            : "Scan this QR code with your phone to pay"}
+        </p>
 
-      {/* Header */}
-      <p className="text-gray-500 text-sm mb-1">Order #{orderId}</p>
-      <p className="text-2xl font-bold text-gray-800 mb-5">₹{parseFloat(amount).toFixed(2)}</p>
-
-      {/* Instruction */}
-      <p className="text-sm font-semibold text-gray-700 mb-4">📱 Scan QR with your phone to pay</p>
-
-      {/* QR Code */}
-      <div className="bg-white p-4 rounded-xl shadow-inner border border-gray-200 mb-5">
-        <QRCodeSVG value={upiLink} size={250} level="H" includeMargin={true} />
-      </div>
-
-      {/* Payment Info */}
-      <div className="w-full bg-gray-50 rounded-xl border border-gray-200 p-4 mb-5 space-y-2 text-sm">
-        <div className="flex justify-between items-center">
-          <span className="text-gray-500">Pay to</span>
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-gray-800">{upiId}</span>
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium hover:bg-indigo-200 transition"
-            >
-              Copy
-            </button>
+        {/* QR Code */}
+        <div className="flex justify-center mb-4">
+          <div className="p-3 bg-white border-2 border-gray-100 rounded-xl shadow-inner">
+            <QRCodeSVG
+              value={upiLink}
+              size={isMobile ? 200 : 240}
+              bgColor="#ffffff"
+              fgColor="#1f2937"
+              level="H"
+              includeMargin={true}
+            />
           </div>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-500">Amount</span>
-          <span className="font-semibold text-gray-800">₹{parseFloat(amount).toFixed(2)}</span>
+
+        {/* Payment Info */}
+        <div className="bg-gray-50 rounded-xl p-3 mb-4 text-left space-y-1">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Pay to</span>
+            <span className="font-medium text-gray-800">{upiId}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Amount</span>
+            <span className="font-bold text-green-600">₹{amount}.00</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Order ID</span>
+            <span className="font-medium text-gray-800 text-xs">{orderId}</span>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-500">Order</span>
-          <span className="font-mono text-gray-700 text-xs">{orderId}</span>
-        </div>
+
+        {/* Mobile Only — UPI App Button */}
+        {isMobile && (
+          <div className="space-y-3">
+            <a
+              href={upiLink}
+              className="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center py-3 rounded-xl font-semibold text-base transition-colors"
+            >
+              💳 Pay ₹{amount} via UPI App
+            </a>
+
+            {/* Supported Apps — Mobile Only */}
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <span className="text-xs text-gray-400">Works with:</span>
+              {["GPay", "PhonePe", "Paytm", "BHIM"].map((app) => (
+                <span
+                  key={app}
+                  className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full"
+                >
+                  {app}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Desktop Only — Instruction */}
+        {!isMobile && (
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-left">
+            <p className="text-sm font-semibold text-blue-800 mb-2">
+              📱 How to pay from your phone:
+            </p>
+            <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+              <li>Open GPay / PhonePe / Paytm on your phone</li>
+              <li>Tap "Scan QR" or use camera</li>
+              <li>Scan the QR code above</li>
+              <li>₹{amount} will be pre-filled — tap Pay</li>
+            </ol>
+          </div>
+        )}
       </div>
 
-      {/* Android Only: Direct Pay Button */}
-      {isAndroid && (
-        <a
-          href={upiLink}
-          className="w-full bg-indigo-600 text-white text-center py-3 rounded-lg font-medium hover:bg-indigo-700 transition shadow-md mb-4"
-        >
-          Pay ₹{parseFloat(amount).toFixed(2)} via UPI App
-        </a>
-      )}
+      {/* UTR Form — shown on ALL devices after payment */}
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <h3 className="text-base font-bold text-gray-800 mb-1">
+          Paid? Confirm your payment
+        </h3>
+        <p className="text-sm text-gray-500 mb-4">
+          Enter the UTR / Transaction Reference number from your UPI app
+        </p>
 
-      {/* UTR Hint Box */}
-      <div className="w-full bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800">
-        <p className="font-medium mb-1">✅ After paying, confirm your payment</p>
-        <p className="text-blue-600 text-xs">Enter your UTR / Transaction ID in the form below to confirm your payment.</p>
-      </div>
+        <form onSubmit={handleUTRSubmit} className="space-y-3">
+          <div>
+            <input
+              type="text"
+              value={utrNumber}
+              onChange={(e) => setUtrNumber(e.target.value)}
+              placeholder="e.g. 123456789012"
+              maxLength={20}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Find this in your UPI app → Payment History → Transaction ID
+            </p>
+          </div>
 
-      {/* Timer */}
-      <div className="mt-5 text-sm text-red-500 font-medium flex items-center gap-1">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Time remaining: {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+          <button
+            type="submit"
+            disabled={loading || !utrNumber}
+            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold text-sm transition-colors"
+          >
+            {loading ? "Submitting..." : "✅ Confirm Payment"}
+          </button>
+        </form>
       </div>
     </div>
   );
