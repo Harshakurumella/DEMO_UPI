@@ -8,7 +8,8 @@ const initiatePayment = async (req, res) => {
     const upiId = process.env.UPI_ID;
     const upiName = process.env.UPI_NAME;
     
-    const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR&tn=${orderId}`;
+    const formattedAmount = Number(amount).toFixed(2);
+    const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${formattedAmount}&cu=INR&tn=${orderId}&tr=${orderId}`;
 
     const payment = await Payment.create({
       orderId,
@@ -77,4 +78,35 @@ const getPaymentStatus = async (req, res) => {
   }
 };
 
-module.exports = { initiatePayment, submitUtr, getPaymentStatus };
+const sendCollectRequest = async (req, res) => {
+  try {
+    const { orderId, customerUpiId } = req.body;
+
+    const payment = await Payment.findOne({ orderId });
+    if (!payment) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const upiRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z]{3,}$/;
+    if (!upiRegex.test(customerUpiId)) {
+      return res.status(400).json({ message: "Invalid UPI ID format" });
+    }
+
+    payment.customerUpiId = customerUpiId;
+    payment.collectRequestSent = true;
+    payment.collectRequestSentAt = new Date();
+    payment.paymentMethod = "collect";
+    await payment.save();
+
+    res.json({
+      success: true,
+      message: `Payment request sent to ${customerUpiId}. Please check your UPI app and approve the ₹${payment.amount} payment.`,
+      orderId,
+      customerUpiId
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { initiatePayment, submitUtr, getPaymentStatus, sendCollectRequest };

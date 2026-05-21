@@ -151,6 +151,8 @@ const AdminDashboard = () => {
                 <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 text-sm">
                   <th className="p-4 font-semibold">Order ID</th>
                   <th className="p-4 font-semibold">Customer</th>
+                  <th className="p-4 font-semibold">Payment Method</th>
+                  <th className="p-4 font-semibold">Customer UPI ID</th>
                   <th className="p-4 font-semibold">Amount</th>
                   <th className="p-4 font-semibold">UTR Number</th>
                   <th className="p-4 font-semibold">Status</th>
@@ -160,9 +162,9 @@ const AdminDashboard = () => {
               </thead>
               <tbody className="text-sm">
                 {loading ? (
-                  <tr><td colSpan="7" className="p-8 text-center text-gray-500">Loading...</td></tr>
+                  <tr><td colSpan="9" className="p-8 text-center text-gray-500">Loading...</td></tr>
                 ) : payments.length === 0 ? (
-                  <tr><td colSpan="7" className="p-8 text-center text-gray-500">No payments found</td></tr>
+                  <tr><td colSpan="9" className="p-8 text-center text-gray-500">No payments found</td></tr>
                 ) : (
                   payments.map(payment => (
                     <tr key={payment._id} className="border-b border-gray-100 hover:bg-gray-50 transition">
@@ -172,13 +174,23 @@ const AdminDashboard = () => {
                         <p className="text-xs text-gray-500">{payment.customerEmail}</p>
                         <p className="text-xs text-gray-500">{payment.customerPhone}</p>
                       </td>
+                      <td className="p-4 text-gray-700 capitalize">{payment.paymentMethod || 'qr'}</td>
+                      <td className="p-4">
+                        {payment.collectRequestSent ? (
+                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1 w-max">
+                            🔵 Collect Request Sent → {payment.customerUpiId}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
                       <td className="p-4 font-semibold text-gray-700">₹{payment.amount}</td>
                       <td className="p-4 font-mono text-gray-600">{payment.utrNumber || '-'}</td>
                       <td className="p-4">{getStatusBadge(payment.status)}</td>
                       <td className="p-4 text-gray-500">{new Date(payment.createdAt).toLocaleDateString()}</td>
                       <td className="p-4">
                         <div className="flex gap-2">
-                          {payment.status === 'submitted' && (
+                          {(payment.status === 'submitted' || (payment.status === 'pending' && payment.collectRequestSent)) && (
                             <>
                               <button onClick={() => handleVerify(payment._id)} className="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition" title="Verify">
                                 ✅

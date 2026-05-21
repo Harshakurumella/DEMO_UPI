@@ -38,7 +38,7 @@ const PaymentPage = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-10 px-4 bg-gray-50">
-      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl overflow-hidden transition-all duration-300">
+      <div className={`w-full bg-white shadow-xl rounded-2xl overflow-hidden transition-all duration-300 ${step === 2 ? 'max-w-4xl' : 'max-w-md'}`}>
         <div className="bg-indigo-600 p-6 text-white text-center">
           <h1 className="text-2xl font-bold">UPI Pay Demo</h1>
           <p className="text-indigo-200 mt-1">Fast and secure payments</p>
@@ -112,16 +112,18 @@ const PaymentPage = () => {
                     amount={paymentData.amount} 
                     orderId={paymentData.orderId}
                   />
-                  <UTRForm orderId={paymentData.orderId} />
-                  <button 
-                    onClick={() => {
-                      setStep(1);
-                      setPaymentData(null);
-                    }}
-                    className="mt-4 w-full bg-white text-gray-600 py-3 rounded-lg font-medium border border-gray-200 hover:bg-gray-50 transition shadow-sm"
-                  >
-                    Cancel Payment
-                  </button>
+                  <div className="max-w-md mx-auto mt-6">
+                    <UTRForm orderId={paymentData.orderId} />
+                    <button 
+                      onClick={() => {
+                        setStep(1);
+                        setPaymentData(null);
+                      }}
+                      className="mt-4 w-full bg-white text-gray-600 py-3 rounded-lg font-medium border border-gray-200 hover:bg-gray-50 transition shadow-sm"
+                    >
+                      Cancel Payment
+                    </button>
+                  </div>
                 </>
               )}
             </div>

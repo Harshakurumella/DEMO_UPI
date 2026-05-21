@@ -39,7 +39,11 @@ const paymentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  verifiedAt: Date
+  verifiedAt: Date,
+  customerUpiId: String,
+  collectRequestSent: { type: Boolean, default: false },
+  collectRequestSentAt: Date,
+  paymentMethod: { type: String, enum: ["qr", "collect", "deeplink"], default: "qr" }
 });
 
 module.exports = mongoose.model('Payment', paymentSchema);
