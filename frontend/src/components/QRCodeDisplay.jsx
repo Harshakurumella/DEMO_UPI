@@ -43,7 +43,7 @@ const QRCodeDisplay = ({ upiLink, amount, orderId, upiId }) => {
         </h2>
         <p className="text-sm text-gray-500 mb-4">
           {isMobile
-            ? "Scan QR or tap the button below to pay"
+            ? "Open your UPI app → Scan QR → Pay"
             : "Scan this QR code with your phone to pay"}
         </p>
 
@@ -80,12 +80,30 @@ const QRCodeDisplay = ({ upiLink, amount, orderId, upiId }) => {
         {/* Mobile Only — UPI App Button */}
         {isMobile && (
           <div className="space-y-3">
+            {/* Warning banner */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left">
+              <p className="text-xs font-semibold text-amber-800 mb-1">⭐ Recommended: Scan QR above</p>
+              <p className="text-xs text-amber-700">
+                Open GPay / PhonePe → tap <strong>Scan QR</strong> → scan the code above. This is the most reliable method.
+              </p>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-xs text-gray-400">or try direct pay</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+
             <a
               href={upiLink}
               className="block w-full bg-indigo-600 hover:bg-indigo-700 text-white text-center py-3 rounded-xl font-semibold text-base transition-colors"
             >
               💳 Pay ₹{amount} via UPI App
             </a>
+            <p className="text-xs text-center text-gray-400">
+              ⚠️ If GPay shows "declined for security reasons", use the QR scan method above instead.
+            </p>
 
             {/* Supported Apps — Mobile Only */}
             <div className="flex items-center justify-center gap-2 flex-wrap">
